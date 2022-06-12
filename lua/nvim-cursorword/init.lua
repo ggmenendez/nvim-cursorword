@@ -3,6 +3,11 @@ local M = {}
 local fn = vim.fn
 local api = vim.api
 
+local DEFAULT_OPTIONS = {
+  min_legnth = 3,
+  hl = { underline = true },
+}
+
 local function matchdelete(clear_word)
   if clear_word then
     vim.w.cursorword = nil
@@ -56,6 +61,11 @@ end
 
 function M.matchdelete()
   matchdelete(true)
+end
+
+function M.setup(options)
+  M.options = vim.tbl_deep_extend("force", DEFAULT_OPTIONS, options or {})
+  require'nvim-cursorword.commands'.CursorWordEnable(M.options.hl)
 end
 
 return M
