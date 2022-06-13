@@ -27,17 +27,35 @@ local function matchstr(...)
 end
 
 function M.matchadd()
-  if vim.tbl_contains(vim.g.cursorword_disable_filetypes or {}, vim.bo.filetype) then
+  if vim.tbl_contains(M.options.disable_filetypes or {}, vim.bo.filetype) then
     return
   end
 
-  local column = api.nvim_win_get_cursor(0)[2]
+  local mode_table = api.nvim_get_mode()
+  if (mode_table.mode ~= "v") then
+    matchdelete(true)
+    return
+  end
+
+  local visual_mark = fn.getpos("v")
+  local cursor_mark = fn.getpos(".")
+  local visual_line = visual_mark[2]
+  local cursor_line = cursor_mark[2]
+
+  if (visual_line ~= cursor_line) then
+    matchdelete(true)
+    return
+  end
+
+  local visual_column = visual_mark[3]
+  local cursor_column = cursor_mark[3]
+
   local line = api.nvim_get_current_line()
+  local selection = (visual_column > cursor_column)
+    and line:sub(cursor_column, visual_column)
+    or line:sub(visual_column, cursor_column)
 
-  local left = matchstr(line:sub(1, column + 1), [[\k*$]])
-  local right = matchstr(line:sub(column + 1), [[^\k*]]):sub(2)
-
-  local cursorword = left .. right
+  local cursorword = selection
 
   if cursorword == vim.w.cursorword then
     return
